@@ -1,0 +1,18 @@
+{
+    "time_mask": [
+        0.1,
+        0.9
+    ],
+    "filter_packet_sizes": [
+        128
+    ],
+    "dim_process": 1,
+    "history_window_size": 20,
+    "dataset_size_max": 10000,
+    "split_ratios": [
+        0.7,
+        0.15,
+        0.15
+    ],
+    "dtime_max" : 20
+}
