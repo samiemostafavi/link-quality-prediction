@@ -44,17 +44,32 @@ class TPPRunner():
             )
 
         # Needed for Intensity Free model
-        mean_inter_time, std_inter_time, mean_event_type, std_event_type, min_dt, max_dt, min_eventtype, max_eventtype = (
-            self._data_loader.train_loader().dataset.get_dt_stats()
-        )
-        runner_config.model_config.set("mean_inter_time", mean_inter_time)
-        runner_config.model_config.set("std_inter_time", std_inter_time)
-        runner_config.model_config.set("mean_log_inter_time", np.log(mean_inter_time+self.eps))
-        runner_config.model_config.set("std_log_inter_time", np.log(std_inter_time+self.eps))
-        runner_config.model_config.set("mean_event_type", mean_event_type)
-        runner_config.model_config.set("std_event_type", std_event_type)
-        runner_config.model_config.set("mean_log_event_type", np.log(mean_event_type+self.eps))
-        runner_config.model_config.set("std_log_event_type", np.log(std_event_type+self.eps))
+        if data_config.data_specs.includes_mcs:
+            mean_inter_time, std_inter_time, mean_event_type, std_event_type, mean_mcs, std_mcs, min_dt, max_dt, min_eventtype, max_eventtype, min_mcs, max_mcs = (
+                self._data_loader.train_loader().dataset.get_dt_stats()
+            )
+            runner_config.model_config.set("mean_inter_time", mean_inter_time)
+            runner_config.model_config.set("std_inter_time", std_inter_time)
+            runner_config.model_config.set("mean_log_inter_time", np.log(mean_inter_time+self.eps))
+            runner_config.model_config.set("std_log_inter_time", np.log(std_inter_time+self.eps))
+            runner_config.model_config.set("mean_event_type", mean_event_type)
+            runner_config.model_config.set("std_event_type", std_event_type)
+            runner_config.model_config.set("mean_mcs", mean_mcs)
+            runner_config.model_config.set("std_mcs", std_mcs)
+            runner_config.model_config.set("mean_log_event_type", np.log(mean_event_type+self.eps))
+            runner_config.model_config.set("std_log_event_type", np.log(std_event_type+self.eps))
+        else:
+            mean_inter_time, std_inter_time, mean_event_type, std_event_type, min_dt, max_dt, min_eventtype, max_eventtype = (
+                self._data_loader.train_loader().dataset.get_dt_stats()
+            )
+            runner_config.model_config.set("mean_inter_time", mean_inter_time)
+            runner_config.model_config.set("std_inter_time", std_inter_time)
+            runner_config.model_config.set("mean_log_inter_time", np.log(mean_inter_time+self.eps))
+            runner_config.model_config.set("std_log_inter_time", np.log(std_inter_time+self.eps))
+            runner_config.model_config.set("mean_event_type", mean_event_type)
+            runner_config.model_config.set("std_event_type", std_event_type)
+            runner_config.model_config.set("mean_log_event_type", np.log(mean_event_type+self.eps))
+            runner_config.model_config.set("std_log_event_type", np.log(std_event_type+self.eps))
         self.timer = Timer()
 
         self.metrics_tracker = MetricsTracker()
@@ -408,23 +423,24 @@ class TPPRunner():
         #if pred_exists and label_exists:
         #    metrics_dict.update(self.metric_functions(epoch_pred, epoch_label, seq_mask=epoch_mask))
 
-        if self.runner_config.base_config.model_id == 'IntensityFree':
-            metrics_dict.update(
-                {
-                    'rmse_dtime' : rmse_dtime_metric_function(epoch_pred, epoch_label),
-                    'rmse_event' : rmse_event_metric_function(epoch_pred, epoch_label),
-                }
-            )
-        elif self.runner_config.base_config.model_id == 'IntensityFree2D':
-            metrics_dict.update(
-                {
-                    'rmse_2d' : rmse_2d_metric_function(epoch_pred, epoch_label),
-                    'rmse_2d_dtime' : rmse_2d_dtime_metric_function(epoch_pred, epoch_label),
-                    'rmse_2d_event' : rmse_2d_event_metric_function(epoch_pred, epoch_label),
-                }
-            )
-        else:
-            metrics_dict.update(self.metric_functions(epoch_pred, epoch_label, seq_mask=epoch_mask))
+        if phase not in [RunnerPhase.TRAIN, RunnerPhase.VALIDATE]:
+            if self.runner_config.base_config.model_id == 'IntensityFree':
+                metrics_dict.update(
+                    {
+                        'rmse_dtime' : rmse_dtime_metric_function(epoch_pred, epoch_label),
+                        'rmse_event' : rmse_event_metric_function(epoch_pred, epoch_label),
+                    }
+                )
+            elif self.runner_config.base_config.model_id == 'IntensityFree2D':
+                metrics_dict.update(
+                    {
+                        'rmse_2d' : rmse_2d_metric_function(epoch_pred, epoch_label),
+                        'rmse_2d_dtime' : rmse_2d_dtime_metric_function(epoch_pred, epoch_label),
+                        'rmse_2d_event' : rmse_2d_event_metric_function(epoch_pred, epoch_label),
+                    }
+                )
+            else:
+                metrics_dict.update(self.metric_functions(epoch_pred, epoch_label, seq_mask=epoch_mask))
 
         if phase == RunnerPhase.PREDICT:
             metrics_dict.update({'pred': epoch_pred, 'label': epoch_label})

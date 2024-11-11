@@ -5,6 +5,8 @@
     "slots_duration_ms": 0.5,
     "scheduling_map_num_integers": 4,
     "max_num_frames": 1024,
-    "scheduling_time_ahead_ms" : 4,
-    "max_harq_attempts": 3
+    "scheduling_time_ahead_ms" : 2,
+    "max_harq_attempts": 4,
+    "gnb_command" : "./nr-softmodem -O ../../../targets/PROJECTS/GENERIC-NR-5GC/CONF/gnb.sa.band77.fr1.106PRB.usrpb210.conf --sa --usrp-tx-thread-config 1 -E --MACRLCs.[0].dl_max_mcs 21 --MACRLCs.[0].ul_max_mcs 21 --gNBs.[0].min_rxtxtime 6 --MACRLCs.[0].ulsch_max_frame_inactivity 100",
+    "ue_command" : "./nr-uesoftmodem --band 77 -C 3919440000 -r 106 --numerology 1 --ssb 396 --sa -E --uicc0.imsi 001010000000001 --uicc0.dnn oai --uicc0.nssai_sst 1 --uicc0.nssai_sd 16777215  --uicc0.opc c42449363bbad02b66d16bc975d77cc1  --uicc0.key fec86ba6eb707ed08905757b1bb44b8f --usrp-args 'mgmt_addr=10.30.10.8,addr=10.30.10.8' --ue-fo-compensation --ue-rxgain 96 --ue-txgain 20  --ue-max-power 0 --edaf-addr /tmp/edaf"
 }

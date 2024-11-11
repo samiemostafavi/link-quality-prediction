@@ -1,308 +1,114 @@
 pipeline_config_id: runner_config
 
 data:
-  exp1_results_0:
+
+  s9_results_0:
     data_format: json
-    train_dir:  ./data/exp1_results/training_datasets/test0/train.pkl
-    valid_dir:  ./data/exp1_results/training_datasets/test0/dev.pkl
-    test_dir:  ./data/exp1_results/training_datasets/test0/test.pkl
+    train_dir:  ./data/s9_results/training_datasets/test0/train.pkl
+    valid_dir:  ./data/s9_results/training_datasets/test0/dev.pkl
+    test_dir:  ./data/s9_results/training_datasets/test0/test.pkl
     data_specs:
-      padding_strategy: do_not_pad
+      num_event_types: 3
+      pad_token_id: 3
+      padding_side: right
+      truncation_side: right
 
-  s20-2_results_0:
-    data_format: pkl
-    train_dir: ../data/s20-2_results/training_datasets/test0/train.pkl
-    valid_dir: ../data/s20-2_results/training_datasets/test0/dev.pkl
-    test_dir: ../data/s20-2_results/training_datasets/test0/test.pkl
+  s63_results_0_with_mcs:
+    data_format: json
+    train_dir:  ./data/s63_results/training_datasets/test0/train.pkl
+    valid_dir:  ./data/s63_results/training_datasets/test0/dev.pkl
+    test_dir:  ./data/s63_results/training_datasets/test0/test.pkl
     data_specs:
-      padding_strategy: do_not_pad
+      includes_mcs: true
+      num_event_types: 8
+      pad_token_id: 8
+      padding_side: right
+      truncation_side: right
 
-  s39_results_0:
-    data_format: pkl
-    train_dir: ../data/s39_results/training_datasets/test0/train.pkl
-    valid_dir: ../data/s39_results/training_datasets/test0/dev.pkl
-    test_dir: ../data/s39_results/training_datasets/test0/test.pkl
+  s63_results_0_no_mcs_time:
+    data_format: json
+    train_dir:  ./data/s63_results/training_datasets/test0/train.pkl
+    valid_dir:  ./data/s63_results/training_datasets/test0/dev.pkl
+    test_dir:  ./data/s63_results/training_datasets/test0/test.pkl
     data_specs:
-      padding_strategy: do_not_pad
+      includes_mcs: false
+      num_event_types: 8
+      pad_token_id: 8
+      padding_side: right
+      truncation_side: right
+      padding_strategy: 'max_length'
+      max_len: 90
 
-  s40_results_0:
-    data_format: pkl
-    train_dir: ../data/s40_results/training_datasets/test0/train.pkl
-    valid_dir: ../data/s40_results/training_datasets/test0/dev.pkl
-    test_dir: ../data/s40_results/training_datasets/test0/test.pkl
+  s63_results_0_no_mcs:
+    data_format: json
+    train_dir:  ./data/s63_results/training_datasets/test0/train.pkl
+    valid_dir:  ./data/s63_results/training_datasets/test0/dev.pkl
+    test_dir:  ./data/s63_results/training_datasets/test0/test.pkl
     data_specs:
-      padding_strategy: do_not_pad
+      includes_mcs: false
+      num_event_types: 8
+      pad_token_id: 8
+      padding_side: right
+      truncation_side: right
 
-  s50_results_0:
-    data_format: pkl
-    train_dir: ../data/s50_results/training_datasets/test0/train.pkl
-    valid_dir: ../data/s50_results/training_datasets/test0/dev.pkl
-    test_dir: ../data/s50_results/training_datasets/test0/test.pkl
-    data_specs:
-      padding_strategy: do_not_pad
 
-IF_train_exp1_0:
+IF_train_s63_0:
   base_config:
     stage: train
     backend: torch
-    dataset_id: exp1_results_0
+    dataset_id: s63_results_0_with_mcs
     runner_id: std_tpp
     model_id: IntensityFree
-    base_dir: './data/exp1_results/training_results/test0/'
+    base_dir: './data/s63_results/training_results/test0/'
   trainer_config:
-    batch_size: 4096
-    max_epoch: 800
+    batch_size: 1024
+    max_epoch: 200
     shuffle: False
     optimizer: adam
-    learning_rate: 1.e-4
+    learning_rate: 1.e-5
     valid_freq: 10
     use_tfb: False
     metrics: [ 'acc', 'rmse' ]
     seed: 2019
     gpu: 0
   model_config:
-    hidden_size: 64
+    hidden_size: 512
     time_emb_size: 16
     num_layers: 2
     loss_integral_num_sample_per_step: 20
     use_ln: False
-  model_specs:
-    num_mix_components: 16
-    prior: false
+    model_specs:
+      num_mix_components: 4
+      prior: false
 
 
-IF_train_exp1_0_prior:
+THP_train_s63_0_no_mcs:
   base_config:
     stage: train
     backend: torch
-    dataset_id: exp1_results_0
+    dataset_id: s63_results_0_no_mcs
     runner_id: std_tpp
-    model_id: IntensityFree
-    base_dir: './data/exp1_results/training_results/test0/'
+    model_id: THP # model name
+    base_dir: './data/s63_results/training_results/test0/'
   trainer_config:
-    batch_size: 4096
-    max_epoch: 2000
-    shuffle: False
-    optimizer: adam
-    learning_rate: 4.e-3
-    valid_freq: 10
-    use_tfb: False
-    metrics: [ 'acc', 'rmse' ]
-    seed: 2019
-    gpu: 0
-  model_config:
-    hidden_size: 64
-    time_emb_size: 16
-    num_layers: 2
-    loss_integral_num_sample_per_step: 20
-    use_ln: False
-  model_specs:
-    num_mix_components: 16
-    prior: true
-
-
-IF_train_s20-2_0:
-  base_config:
-    stage: train
-    backend: torch
-    dataset_id: s20-2_results_0
-    runner_id: std_tpp
-    model_id: IntensityFree
-    base_dir: './data/s20-2_results/training_results/test0/'
-  trainer_config:
-    batch_size: 4096
-    max_epoch: 800
-    shuffle: False
-    optimizer: adam
-    learning_rate: 1.e-4
-    valid_freq: 10
-    use_tfb: False
-    metrics: [ 'acc', 'rmse' ]
-    seed: 2019
-    gpu: 0
-  model_config:
-    hidden_size: 64
-    time_emb_size: 16
-    num_layers: 2
-    loss_integral_num_sample_per_step: 20
-    use_ln: False
-  model_specs:
-    num_mix_components: 16
-    prior: false
-
-IF_train_s20-2_0_prior:
-  base_config:
-    stage: train
-    backend: torch
-    dataset_id: s20-2_results_0
-    runner_id: std_tpp
-    model_id: IntensityFree
-    base_dir: './data/s20-2_results/training_results/test0/'
-  trainer_config:
-    batch_size: 4096
-    max_epoch: 800
-    shuffle: False
-    optimizer: adam
-    learning_rate: 1.e-4
-    valid_freq: 10
-    use_tfb: False
-    metrics: [ 'acc', 'rmse' ]
-    seed: 2019
-    gpu: 0
-  model_config:
-    hidden_size: 64
-    time_emb_size: 16
-    num_layers: 2
-    loss_integral_num_sample_per_step: 20
-    use_ln: False
-  model_specs:
-    num_mix_components: 16
-    prior: true
-
-
-IF_train_s39_results_0:
-  base_config:
-    stage: train
-    backend: torch
-    dataset_id: s39_results_0
-    runner_id: std_tpp
-    model_id: IntensityFree2D
-    base_dir: './data/s39_results/training_results/test0/'
-  trainer_config:
-    batch_size: 2048
-    max_epoch: 1500
-    shuffle: False
-    optimizer: adam
-    learning_rate: 1.e-4
-    valid_freq: 10
-    use_tfb: False
-    metrics: [ 'acc', 'rmse' ]
-    seed: 2019
-    gpu: 0
-  model_config:
-    hidden_size: 128
-    time_emb_size: 16
-    num_layers: 2
-    loss_integral_num_sample_per_step: 20
-    use_ln: False
-  model_specs:
-    num_mix_components: 16
-    prior: false
-  noise_regularization:
-    dtime:
-      noise_type: gaussian
-      std_dev: 0
-    event_type:
-      noise_type: gaussian
-      std_dev: 0.1
-
-
-IF_train_s39_results_0_prior:
-  base_config:
-    stage: train
-    backend: torch
-    dataset_id: s39_results_0
-    runner_id: std_tpp
-    model_id: IntensityFree2D
-    base_dir: './data/s39_results/training_results/test0/'
-  trainer_config:
-    batch_size: 2048
-    max_epoch: 2500
+    batch_size: 1024
+    max_epoch: 150
     shuffle: False
     optimizer: adam
     learning_rate: 1.e-3
-    valid_freq: 10
+    valid_freq: 5
     use_tfb: False
     metrics: [ 'acc', 'rmse' ]
     seed: 2019
     gpu: 0
   model_config:
-    hidden_size: 128
+    hidden_size: 256
     time_emb_size: 16
     num_layers: 2
+    num_heads: 2
+    mc_num_sample_per_step: 20
     loss_integral_num_sample_per_step: 20
     use_ln: False
-  model_specs:
-    num_mix_components: 16
-    prior: true
-  noise_regularization:
-    dtime:
-      noise_type: gaussian
-      std_dev: 0
-    event_type:
-      noise_type: gaussian
-      std_dev: 0.1
-
-
-IF_train_s40_results_0:
-  base_config:
-    stage: train
-    backend: torch
-    dataset_id: s40_results_0
-    runner_id: std_tpp
-    model_id: IntensityFree2D
-    base_dir: './data/s40_results/training_results/test0/'
-  trainer_config:
-    batch_size: 4096
-    max_epoch: 1000
-    shuffle: False
-    optimizer: adam
-    learning_rate: 8e-05
-    valid_freq: 10
-    use_tfb: False
-    metrics: [ 'acc', 'rmse' ]
-    seed: 2019
-    gpu: 0
-  model_config:
-    hidden_size: 128
-    time_emb_size: 16
-    num_layers: 2
-    loss_integral_num_sample_per_step: 20
-    use_ln: False
-  model_specs:
-    num_mix_components: 16
-    prior: true
-  noise_regularization:
-    dtime:
-      noise_type: gaussian
-      std_dev: 0
-    event_type:
-      noise_type: gaussian
-      std_dev: 0.1
-
-
-IF_train_s40_results_0_prior:
-  base_config:
-    stage: train
-    backend: torch
-    dataset_id: s40_results_0
-    runner_id: std_tpp
-    model_id: IntensityFree2D
-    base_dir: './data/s40_results/training_results/test0/'
-  trainer_config:
-    batch_size: 2048
-    max_epoch: 2000
-    shuffle: False
-    optimizer: adam
-    learning_rate: 0.001
-    valid_freq: 10
-    use_tfb: False
-    metrics: [ 'acc', 'rmse' ]
-    seed: 2019
-    gpu: 0
-  model_config:
-    hidden_size: 128
-    time_emb_size: 16
-    num_layers: 2
-    loss_integral_num_sample_per_step: 20
-    use_ln: False
-  model_specs:
-    num_mix_components: 16
-    prior: true
-  noise_regularization:
-    dtime:
-      noise_type: gaussian
-      std_dev: 0
-    event_type:
-      noise_type: gaussian
-      std_dev: 0.1
+    model_specs:
+      prior: false
+      includes_mcs: false

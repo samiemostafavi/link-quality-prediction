@@ -1,5 +1,5 @@
 import argparse
-from src.preprocess import preprocess_edaf, plot_link_data, create_training_dataset_static_link_const_mcs
+from src.preprocess import preprocess_edaf, plot_link_data, create_training_dataset
 from src.train import train_model
 from src.predict import generate_predictions, plot_predictions
 from src.evaluate import evaluate_model
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     elif args.task == "plot_link_data":
         plot_link_data(args)
     elif args.task == "create_training_dataset":
-        create_training_dataset_static_link_const_mcs(args)
+        create_training_dataset(args)
     elif args.task == "train_model":
         train_model(args)
     elif args.task == "generate_predictions":
