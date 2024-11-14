@@ -39,15 +39,18 @@ data:
       padding_strategy: 'max_length'
       max_len: 90
 
-  s63_results_0_no_mcs:
+  s63_results_0_mcs_events:
     data_format: json
     train_dir:  ./data/s63_results/training_datasets/test0/train.pkl
     valid_dir:  ./data/s63_results/training_datasets/test0/dev.pkl
     test_dir:  ./data/s63_results/training_datasets/test0/test.pkl
     data_specs:
       includes_mcs: false
-      num_event_types: 8
-      pad_token_id: 8
+      mcs_events: true
+      min_mcs: 11
+      num_event_types: 15
+      num_event_types_no_mcs: 8
+      pad_token_id: 15
       padding_side: right
       truncation_side: right
 
@@ -111,4 +114,37 @@ THP_train_s63_0_no_mcs:
     use_ln: False
     model_specs:
       prior: false
+      includes_mcs: false
+
+
+THP_train_s63_0_mcs_events:
+  base_config:
+    stage: train
+    backend: torch
+    dataset_id: s63_results_0_mcs_events
+    runner_id: std_tpp
+    model_id: THP # model name
+    base_dir: './data/s63_results/training_results/test0/'
+  trainer_config:
+    batch_size: 1024
+    max_epoch: 400
+    shuffle: False
+    optimizer: adam
+    learning_rate: 1.e-3
+    valid_freq: 5
+    use_tfb: False
+    metrics: [ 'acc', 'rmse' ]
+    seed: 2019
+    gpu: 0
+  model_config:
+    hidden_size: 256
+    time_emb_size: 16
+    num_layers: 2
+    num_heads: 2
+    mc_num_sample_per_step: 20
+    loss_integral_num_sample_per_step: 20
+    use_ln: False
+    model_specs:
+      prior: false
+      filter_mcs_events_for_loss: true
       includes_mcs: false

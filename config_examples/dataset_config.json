@@ -1,7 +1,6 @@
 {
-    "time_mask": [
-        0.1,
-        0.9
+    "time_masks": [
+        [0.1,0.9]
     ],
     "filter_packet_sizes": [
         128
