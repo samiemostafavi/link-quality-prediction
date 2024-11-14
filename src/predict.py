@@ -44,12 +44,15 @@ def generate_predictions(args):
                 "test_dir": training_output_config['data_config']['test_dir'],
                 "data_specs": {
                     "num_event_types": training_output_config['data_config']['data_specs']['num_event_types'],
-                    "includes_mcs" : training_output_config['data_config']['data_specs']['includes_mcs'],
                     "pad_token_id": training_output_config['data_config']['data_specs']['pad_token_id'],
                     "padding_side": training_output_config['data_config']['data_specs']['padding_side'],
                     "truncation_side": training_output_config['data_config']['data_specs']['truncation_side'],
                     "padding_strategy" : training_output_config['data_config']['data_specs']['padding_strategy'],
-                    "max_len": training_output_config['data_config']['data_specs']['max_len']
+                    "max_len": training_output_config['data_config']['data_specs']['max_len'],
+                    "includes_mcs" : training_output_config['data_config']['data_specs']['includes_mcs'],
+                    "num_event_types_no_mcs": training_output_config['data_config']['data_specs']['num_event_types_no_mcs'],
+                    "min_mcs": training_output_config['data_config']['data_specs']['min_mcs'],
+                    "mcs_events": training_output_config['data_config']['data_specs']['mcs_events']
                 }
             }
         },
@@ -234,12 +237,39 @@ def plot_sampling_predictions_1D(dataset_config, generation_output_config, data,
     )
     fig.write_html(model_path / "prob_event_types.html")
 
+def transform_list(input_list, max_period):
+    # Initialize an empty list to store the transformed values
+    transformed_list = []
+    
+    # Keep track of period-based offset for each segment
+    offset = 0
+    previous_value = None
+
+    for i, value in enumerate(input_list):
+        # Check if there is a decrease or reset to a lower number (assumed new period start)
+        if previous_value is not None and value < previous_value:
+            offset += max_period  # Decrease offset by max_period
+        
+        # Calculate and append the new value
+        transformed_value = value + offset
+        transformed_list.append(transformed_value)
+        
+        # Update the previous value
+        previous_value = value
+    
+    return transformed_list
 
 def plot_probability_predictions_1D(dataset_config, generation_output_config, data, model_path, args):
 
     includes_mcs = False
     if generation_output_config['model_config']['model_specs']['includes_mcs']:
         includes_mcs = True
+
+    mcs_events = False
+    if generation_output_config['data_config']['data_specs']['mcs_events']:
+        mcs_events = True
+        num_event_types_no_mcs = generation_output_config['data_config']['data_specs']['num_event_types_no_mcs']
+        min_mcs = generation_output_config['data_config']['data_specs']['min_mcs']
 
     # plot history
     history_dtime_data = []
@@ -289,34 +319,77 @@ def plot_probability_predictions_1D(dataset_config, generation_output_config, da
     
     # Create a subplot with 2 rows and 1 column
     if includes_mcs:
-        fig = make_subplots(rows=3, cols=1, subplot_titles=("Predictions", "History MCS"))
+        fig = make_subplots(rows=2, cols=1, subplot_titles=("Predictions", "History MCS"))
     else:
-        fig = make_subplots(rows=2, cols=1, subplot_titles=("Predictions"))
+        fig = make_subplots(rows=1, cols=1, subplot_titles=("Predictions"), specs=[[{"secondary_y": True}]])
+
+    history_time = transform_list(history_time, 1024*10.0) # 1024 (max_num_frames) * 10ms (20 slots each 0.5 ms) is the max period
 
     # Add the scatter plot for predictions to the first row
+    if mcs_events:
+        history_event_type = np.where(
+            np.array(history_event_type) >= num_event_types_no_mcs,
+            np.array(history_event_type) + min_mcs - num_event_types_no_mcs,
+            np.array(history_event_type)
+        )
+
     fig.add_trace(
-        go.Scatter(x=dtime_samples, y=dtime_prob_pred, mode='markers', name='Predictions'),
-        row=1, col=1
+        go.Scatter(
+            x=history_time[:-1], 
+            y=np.where(np.array(history_event_type[:-1]) >= num_event_types_no_mcs, num_event_types_no_mcs, np.array(history_event_type[:-1])), 
+            mode='markers+text', 
+            text=np.where(np.array(history_event_type[:-1]) >= num_event_types_no_mcs, np.array(history_event_type[:-1]), ''),
+            textposition='bottom center',
+            name='History events'
+        ),
+        row=1, col=1,
+        secondary_y=False
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=[history_time[-1]], 
+            y=np.where(np.array([history_event_type[-1]]) >= num_event_types_no_mcs, num_event_types_no_mcs, np.array([history_event_type[-1]])), 
+            mode='markers+text', 
+            text=np.where(np.array([history_event_type[-1]]) >= num_event_types_no_mcs, np.array([history_event_type[-1]]), ''),
+            textposition='bottom center',
+            name='Label event'
+        ),
+        row=1, col=1,
+        secondary_y=False
     )
 
     # Add the scatter plot for predictions to the first row
+    #fig.add_trace(
+    #    go.Scatter(x=history_time, y=np.ones(len(history_dtime)), mode='markers', name='labels'),
+    #    row=2, col=1
+    #)
+
     fig.add_trace(
-        go.Scatter(x=history_time, y=np.ones(len(history_dtime)), mode='markers', name='labels'),
-        row=2, col=1
-    )
+        go.Scatter(x=history_time[-2]+dtime_samples, y=dtime_prob_pred, mode='markers', name='predictions'),
+        row=1, col=1,
+        secondary_y=True
+    )  
+
+    # Add the scatter plot for predictions to the first row
+    #fig.add_trace(
+    #    go.Scatter(x=dtime_samples, y=dtime_prob_pred, mode='markers', name='Predictions'),
+    #    row=1, col=1
+    #)
 
     if includes_mcs:
         # Add the scatter plot for history MCS to the second row
         fig.add_trace(
             go.Scatter(x=np.arange(len(history_mcs)), y=history_mcs, mode='lines+markers', name='History MCS'),
-            row=3, col=1
+            row=2, col=1
         )
 
     # Update layout for better aesthetics
     fig.update_layout(
-        title='Predictions and History',
-        xaxis_title='Time',
-        yaxis_title='Probability'
+        title="Predictions and History",
+        xaxis_title="Time [ms]",
+        yaxis_title="History Events [event type]",
+        yaxis2_title="Prediction Probability"
     )
 
     # Write the plot to an HTML file
